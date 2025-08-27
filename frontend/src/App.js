@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import Login from './Login.jsx';
+import Register from './Register.jsx';
+import RequireAuth from './RequireAuth.jsx';
+import { useAuth } from './AuthContext';
 
-export default function App() {
+function TodoApp() {
   const [todos, setTodos] = useState([]);
   const [text, setText] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -9,24 +14,59 @@ export default function App() {
   const [editId, setEditId] = useState(null);
   const [editText, setEditText] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
+  const [error, setError] = useState("");
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/todos").then((res) => {
-      setTodos(res.data);
-    });
+    setError("");
+    axios.get("/api/todos")
+      .then((res) => setTodos(res.data))
+      .catch(err => {
+        if (err.response?.status === 401) {
+          setError("Session expired. Please log in again.");
+          logout();
+          navigate('/login');
+        } else {
+          setError("Failed to load todos.");
+        }
+      });
+    // eslint-disable-next-line
   }, []);
 
   const addTodo = async () => {
     if (!text.trim()) return;
-    const res = await axios.post("http://localhost:5000/api/todos", { text, dueDate });
-    setTodos([res.data, ...todos]);
-    setText("");
-    setDueDate("");
+    setError("");
+    try {
+      const res = await axios.post("/api/todos", { text, dueDate });
+      setTodos([res.data, ...todos]);
+      setText("");
+      setDueDate("");
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError("Session expired. Please log in again.");
+        logout();
+        navigate('/login');
+      } else {
+        setError("Failed to add todo.");
+      }
+    }
   };
 
   const toggleTodo = async (id) => {
-    const res = await axios.put(`http://localhost:5000/api/todos/${id}`);
-    setTodos(todos.map((todo) => (todo._id === id ? res.data : todo)));
+    setError("");
+    try {
+      const res = await axios.put(`/api/todos/${id}`);
+      setTodos(todos.map((todo) => (todo._id === id ? res.data : todo)));
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError("Session expired. Please log in again.");
+        logout();
+        navigate('/login');
+      } else {
+        setError("Failed to update todo.");
+      }
+    }
   };
 
   const startEdit = (todo) => {
@@ -42,14 +82,36 @@ export default function App() {
   };
 
   const saveEdit = async (id) => {
-    const res = await axios.put(`http://localhost:5000/api/todos/${id}/edit`, { text: editText, dueDate: editDueDate });
-    setTodos(todos.map((todo) => (todo._id === id ? res.data : todo)));
-    cancelEdit();
+    setError("");
+    try {
+      const res = await axios.put(`/api/todos/${id}/edit`, { text: editText, dueDate: editDueDate });
+      setTodos(todos.map((todo) => (todo._id === id ? res.data : todo)));
+      cancelEdit();
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError("Session expired. Please log in again.");
+        logout();
+        navigate('/login');
+      } else {
+        setError("Failed to update todo.");
+      }
+    }
   };
 
   const deleteTodo = async (id) => {
-    await axios.delete(`http://localhost:5000/api/todos/${id}`);
-    setTodos(todos.filter((todo) => todo._id !== id));
+    setError("");
+    try {
+      await axios.delete(`/api/todos/${id}`);
+      setTodos(todos.filter((todo) => todo._id !== id));
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError("Session expired. Please log in again.");
+        logout();
+        navigate('/login');
+      } else {
+        setError("Failed to delete todo.");
+      }
+    }
   };
 
   const filteredTodos = todos.filter((todo) => {
@@ -69,13 +131,16 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #7f53ac 0%, #657ced 100%)", padding: 0, margin: 0 }}>
       <div style={{ maxWidth: 600, margin: "0 auto", padding: 24 }}>
-        <h1 style={{ textAlign: "center", color: "#fff", fontSize: 60, fontWeight: 700, marginBottom: 8, textShadow: "0 2px 8px #0002" }}>
-          My Todo List
-        </h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h1 style={{ textAlign: "center", color: "#fff", fontSize: 60, fontWeight: 700, marginBottom: 8, textShadow: "0 2px 8px #0002" }}>
+            My Todo List
+          </h1>
+          <button onClick={logout} style={{ background: '#f43f5e', color: '#fff', border: 0, borderRadius: 6, padding: '8px 18px', fontWeight: 600, fontSize: 16, cursor: 'pointer', marginLeft: 16 }}>Logout</button>
+        </div>
         <p style={{ textAlign: "center", color: "#e0e7ff", fontSize: 18, marginBottom: 24 }}>
           Stay organized and get things done
         </p>
-
+        {error && <div style={{ color: 'red', textAlign: 'center', marginBottom: 16 }}>{error}</div>}
         {/* Progress Bar */}
         <div style={{ background: "#fff3", borderRadius: 8, height: 10, marginBottom: 16, overflow: "hidden" }}>
           <div style={{
@@ -88,7 +153,6 @@ export default function App() {
         <p style={{ color: "#bae6fd", textAlign: "center", marginBottom: 24 }}>
           {completedCount} of {totalCount} tasks completed
         </p>
-
         {/* Add Todo Form */}
         <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
           <input
@@ -112,7 +176,6 @@ export default function App() {
             Add
           </button>
         </div>
-
         {/* Filter Tabs */}
         <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 24 }}>
           {['all', 'active', 'completed'].map(f => (
@@ -133,7 +196,6 @@ export default function App() {
             </button>
           ))}
         </div>
-
         {/* Todo List */}
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {filteredTodos.map(todo => (
@@ -251,7 +313,6 @@ export default function App() {
             </li>
           ))}
         </ul>
-
         {filteredTodos.length === 0 && (
           <div style={{ textAlign: "center", color: "#fff", marginTop: 48, fontSize: 22 }}>
             {filter === "completed"
@@ -263,5 +324,27 @@ export default function App() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/" element={
+          <RequireAuth>
+            <TodoApp />
+          </RequireAuth>
+        } />
+        <Route path="*" element={<div style={{textAlign:'center',marginTop:60,fontSize:24}}>404 Not Found</div>} />
+      </Routes>
+      <div style={{ textAlign: 'center', marginTop: 16 }}>
+        <Link to="/login" style={{ margin: 8 }}>Login</Link>
+        <Link to="/register" style={{ margin: 8 }}>Register</Link>
+        <Link to="" style={{ margin: 8 }}>Home</Link>
+      </div>
+    </>
   );
 }

@@ -1,34 +1,37 @@
 const express = require('express');
-const Todo = require('../models/Todo');
 const router = express.Router();
+const auth = require('../middleware/auth');
+const Todo = require('../models/Todo');
 
-// Get all todos
-router.get('/', async (req, res) => {
-  const todos = await Todo.find();
+// Get todos for logged-in user
+router.get('/', auth, async (req, res) => {
+  const todos = await Todo.find({ user: req.user });
   res.json(todos);
 });
 
 // Add new todo
 // Add new todo
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   const { text, dueDate } = req.body;
-  const newTodo = new Todo({ text, dueDate });
+  const newTodo = new Todo({ text, dueDate, user: req.user });
   await newTodo.save();
   res.json(newTodo);
 });
 
 // Toggle completion
-router.put('/:id', async (req, res) => {
-  const todo = await Todo.findById(req.params.id);
+router.put('/:id', auth, async (req, res) => {
+  const todo = await Todo.findOne({ _id: req.params.id, user: req.user });
+  if (!todo) return res.status(404).json({ msg: 'Todo not found' });
   todo.completed = !todo.completed;
   await todo.save();
   res.json(todo);
 });
 
 // Edit text or due date
-router.put('/:id/edit', async (req, res) => {
+router.put('/:id/edit', auth, async (req, res) => {
   const { text, dueDate } = req.body;
-  const todo = await Todo.findById(req.params.id);
+  const todo = await Todo.findOne({ _id: req.params.id, user: req.user });
+  if (!todo) return res.status(404).json({ msg: 'Todo not found' });
   if (text !== undefined) todo.text = text;
   if (dueDate !== undefined) todo.dueDate = dueDate;
   await todo.save();
@@ -36,8 +39,9 @@ router.put('/:id/edit', async (req, res) => {
 });
 
 // Delete todo
-router.delete('/:id', async (req, res) => {
-  await Todo.findByIdAndDelete(req.params.id);
+router.delete('/:id', auth, async (req, res) => {
+  const todo = await Todo.findOneAndDelete({ _id: req.params.id, user: req.user });
+  if (!todo) return res.status(404).json({ msg: 'Todo not found' });
   res.json({ message: 'Todo deleted' });
 });
 
