@@ -17,6 +17,8 @@ function TodoApp() {
   const [error, setError] = useState("");
   const { logout } = useAuth();
   const navigate = useNavigate();
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     setError("");
@@ -37,6 +39,11 @@ function TodoApp() {
   const addTodo = async () => {
     if (!text.trim()) return;
     setError("");
+    // Prevent selecting a past date
+    if (dueDate && dueDate < today) {
+      setError("You cannot select a past date!");
+      return;
+    }
     try {
       const res = await axios.post("/api/todos", { text, dueDate });
       setTodos([res.data, ...todos]);
@@ -83,6 +90,11 @@ function TodoApp() {
 
   const saveEdit = async (id) => {
     setError("");
+    // Prevent selecting a past date when editing
+    if (editDueDate && editDueDate < today) {
+      setError("You cannot select a past date!");
+      return;
+    }
     try {
       const res = await axios.put(`/api/todos/${id}/edit`, { text: editText, dueDate: editDueDate });
       setTodos(todos.map((todo) => (todo._id === id ? res.data : todo)));
@@ -182,6 +194,7 @@ function TodoApp() {
           <input
             type="date"
             value={dueDate}
+            min={today}
             onChange={e => setDueDate(e.target.value)}
             style={{ padding: 10, borderRadius: 6, border: "1px solid #ddd", fontSize: 16 }}
           />
@@ -242,6 +255,7 @@ function TodoApp() {
                     <input
                       type="date"
                       value={editDueDate}
+                      min={today}
                       onChange={e => setEditDueDate(e.target.value)}
                       style={{ fontSize: 16, borderRadius: 4, border: '1px solid #ccc', padding: 4 }}
                     />
