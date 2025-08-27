@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 
 function Register() {
@@ -30,6 +31,10 @@ function Register() {
       {error && <div style={{ color: 'red', marginBottom: 12 }}>{error}</div>}
       {success && <div style={{ color: 'green', marginBottom: 12 }}>{success}</div>}
       <button type="submit" style={{ width: '100%', padding: 10, borderRadius: 6, background: 'linear-gradient(90deg, #fbbf24, #22d3ee)', color: '#fff', fontWeight: 600, border: 0, fontSize: 16, cursor: 'pointer' }}>Register</button>
+      <div style={{ textAlign: 'center', marginTop: 16 }}>
+        <p>Already have an account?</p>
+        <Link to="/login" style={{ margin: 8 }}>Login</Link>
+      </div>
     </form>
   );
 }

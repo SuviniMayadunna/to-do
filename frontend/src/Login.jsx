@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom'; 
+import { Link } from 'react-router-dom';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -30,8 +31,16 @@ function Login() {
       <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required style={{ width: '100%', marginBottom: 12, padding: 10, borderRadius: 6, border: '1px solid #ddd' }} />
       {error && <div style={{ color: 'red', marginBottom: 12 }}>{error}</div>}
       <button type="submit" style={{ width: '100%', padding: 10, borderRadius: 6, background: 'linear-gradient(90deg, #22d3ee, #a78bfa)', color: '#fff', fontWeight: 600, border: 0, fontSize: 16, cursor: 'pointer' }}>Login</button>
+      <div style={{ textAlign: 'center', marginTop: 16 }}>
+        <p>Don't have an account?</p>
+        <Link to="/register" style={{ margin: 8 }}>Register</Link>
+      </div>
     </form>
+
+    
+    
   );
+  
 }
 
 export default Login;
