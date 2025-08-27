@@ -130,13 +130,30 @@ function TodoApp() {
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #7f53ac 0%, #657ced 100%)", padding: 0, margin: 0 }}>
+      <button
+        onClick={logout}
+        style={{
+          position: "absolute",
+          top: 32,
+          right: 32,
+          background: "#ff5e62",
+          color: "#fff",
+          border: "none",
+          borderRadius: 6,
+          padding: "10px 24px",
+          fontWeight: "bold",
+          fontSize: 18,
+          cursor: "pointer",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+        }}
+      >Logout</button>
+
       <div style={{ maxWidth: 600, margin: "0 auto", padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h1 style={{ textAlign: "center", color: "#fff", fontSize: 60, fontWeight: 700, marginBottom: 8, textShadow: "0 2px 8px #0002" }}>
             My Todo List
           </h1>
-          <button onClick={logout} style={{ background: '#f43f5e', color: '#fff', border: 0, borderRadius: 6, padding: '8px 18px', fontWeight: 600, fontSize: 16, cursor: 'pointer', marginLeft: 16 }}>Logout</button>
-        </div>
+                  </div>
         <p style={{ textAlign: "center", color: "#e0e7ff", fontSize: 18, marginBottom: 24 }}>
           Stay organized and get things done
         </p>
@@ -340,11 +357,7 @@ export default function App() {
         } />
         <Route path="*" element={<div style={{textAlign:'center',marginTop:60,fontSize:24}}>404 Not Found</div>} />
       </Routes>
-      <div style={{ textAlign: 'center', marginTop: 16 }}>
-        <Link to="/login" style={{ margin: 8 }}>Login</Link>
-        <Link to="/register" style={{ margin: 8 }}>Register</Link>
-        <Link to="" style={{ margin: 8 }}>Home</Link>
-      </div>
+      
     </>
   );
 }
